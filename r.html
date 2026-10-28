@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecionando... | DynamiQR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- App Services -->
+  <script src="js/supabase-client.js"></script>
+
+  <style>
+    :root {
+      --bg: #0a0d14;
+      --card-bg: rgba(18, 24, 38, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --primary: #6366f1;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background-image: 
+        radial-gradient(circle at 50% 30%, rgba(99, 102, 241, 0.12) 0%, transparent 60%);
+    }
+
+    .redirect-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 32px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .redirect-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+    }
+
+    .spinner-ring {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px;
+      border: 4px solid rgba(99, 102, 241, 0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .icon-box {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .icon-box.paused {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .icon-box.error {
+      background: rgba(244, 63, 94, 0.15);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: var(--text-muted);
+      font-size: 0.94rem;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .target-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 24px;
+      word-break: break-all;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: #a5b4fc;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      border-radius: 12px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #4f46e5;
+      transform: translateY(-1px);
+    }
+
+    .footer-badge {
+      margin-top: 32px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .footer-badge span {
+      color: #fff;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="redirect-card">
+    <div id="loading-state">
+      <div class="spinner-ring"></div>
+      <h1>Redirecionando...</h1>
+      <p>Acessando o link dinâmico e computando estatísticas.</p>
+      <div id="target-url-container" class="target-box" style="display:none;"></div>
+      <a id="manual-btn" href="#" class="btn" style="display: none;">Clique aqui se demorar</a>
+    </div>
+
+    <div id="paused-state" style="display: none;">
+      <div class="icon-box paused">⏸</div>
+      <h1>QR Code Pausado</h1>
+      <p>Este QR Code foi pausado temporariamente pelo criador e não está aceitando novos redirecionamentos no momento.</p>
+      <a href="index.html" class="btn">Voltar ao Painel</a>
+    </div>
+
+    <div id="error-state" style="display: none;">
+      <div class="icon-box error">✕</div>
+      <h1>QR Code Não Encontrado</h1>
+      <p id="error-message">O identificador informado não corresponde a nenhum QR Code ativo no banco de dados.</p>
+      <a href="index.html" class="btn">Ir para o Gerenciador</a>
+    </div>
+
+    <div class="footer-badge">
+      Powered by <span>DynamiQR Studio</span>
+    </div>
+  </div>
+
+  <script>
+    (async function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const slug = urlParams.get('c') || urlParams.get('id') || urlParams.get('slug');
+
+      const loadingEl = document.getElementById('loading-state');
+      const pausedEl = document.getElementById('paused-state');
+      const errorEl = document.getElementById('error-state');
+      const errorMsgEl = document.getElementById('error-message');
+      const targetBoxEl = document.getElementById('target-url-container');
+      const manualBtn = document.getElementById('manual-btn');
+
+      if (!slug) {
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorMsgEl.textContent = 'Nenhum código de QR Code foi fornecido na URL (exemplo esperado: ?c=meu-codigo).';
+        return;
+      }
+
+      try {
+        // Registra o scan e recupera a URL de destino
+        const result = await window.supabaseService.recordScan(slug, navigator.userAgent, document.referrer);
+
+        if (result.paused) {
+          loadingEl.style.display = 'none';
+          pausedEl.style.display = 'block';
+          return;
+        }
+
+        if (result.success && result.destination_url) {
+          let dest = result.destination_url.trim();
+          if (!dest.startsWith('http://') && !dest.startsWith('https://')) {
+            dest = 'https://' + dest;
+          }
+
+          targetBoxEl.style.display = 'block';
+          targetBoxEl.textContent = dest;
+          manualBtn.href = dest;
+          manualBtn.style.display = 'inline-flex';
+
+          // Pequeno delay suave para mostrar feedback visual se o usuário estiver acompanhando
+          setTimeout(() => {
+            window.location.replace(dest);
+          }, 350);
+        } else {
+          loadingEl.style.display = 'none';
+          errorEl.style.display = 'block';
+          errorMsgEl.textContent = result.message || `O QR Code com o código "${slug}" não foi localizado.`;
+        }
+      } catch (err) {
+        console.error('Erro no redirecionador:', err);
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorMsgEl.textContent = 'Erro ao processar redirecionamento: ' + err.message;
+      }
+    })();
+  </script>
+</body>
+</html>
